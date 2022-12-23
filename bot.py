@@ -3,7 +3,13 @@ from discord.ext import commands
 import youtube_dl
 from youtube_dl import YoutubeDL
 
-TOKEN = 'MTA1NDc1ODMzNzcwMDQzMzkzMA.GSjSkQ.M2AlMvkWOV5MBtcSZyZcE10VvHLzhga0R2eWG8'
+#commands:
+#   /play <song nome>
+#   /play <song-url>
+#   /stop  -it disconnects the bot and stops music, pause and resume are implemented using reaction
+#   - it should work on multiple servers, but I haven't tested it
+
+TOKEN = 'YOUR_DISCORD_BOT_TOKEN'
 bot = commands.Bot(command_prefix = '/', intents = discord.Intents.all())
 vc = None
 message = None
