@@ -1,17 +1,12 @@
 import discord
 from discord.ext import commands
-import youtube_dl
 from youtube_dl import YoutubeDL
 
-
-#commands:
-#   /play <song nome>
-#   /play <song-url>
-#   /stop  -it disconnects the bot and stops music, pause and resume are implemented using reaction
-#   - it should work on multiple servers, but I haven't tested it
-
 TOKEN = 'YOUR_DISCORD_BOT_TOKEN'
+
 bot = commands.Bot(command_prefix = '/', intents = discord.Intents.all())
+bot.remove_command('help')
+
 vc = None
 message = None
 
@@ -39,18 +34,24 @@ async def stop(ctx):
     except:
         pass
 
-@bot.command()
+@bot.command(aliases=['p'])
 async def play(ctx, *args):
     global vc
     global message
     global db
     url = ' '.join(args)
     FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-    m_url = get_url(url)['source']    
-    m_title = get_url(url)['title']
-    m_id = get_url(url)['id']
-    m_description = get_url(url)['description']
     
+    try:
+        m_url = get_url(url)['source']    
+        m_title = get_url(url)['title']
+        m_id = get_url(url)['id']
+        m_description = get_url(url)['description']
+    except:
+        embed = discord.Embed(title=f'**Error: the video is not accessible and may have age restrictions ! **\n', color=0x000000)
+        await ctx.send(embed=embed)
+        return
+        
     img_link = f'https://i.ytimg.com/vi/{m_id}/hq720.jpg'
     
     
@@ -145,6 +146,15 @@ async def on_reaction_add(reaction, user):
             elif reaction.emoji == '🔊':
                 vol_up(reaction.message.guild.id)
                 await reaction.remove(user) 
+                
+@bot.command()
+async def help(ctx):
+    embed = discord.Embed(title=f'**You can use the following commands: **\n', color=0xffffff)
+    embed.add_field(name="/play or /p", value="plays a song by its title or YouTube url")
+    embed.add_field(name="/stop or /s", value="stops the song and makes the bot quit")
+    embed.add_field(name="/help", value="This command displays a list of all the commands available (not much)")
+    
+    await ctx.send(embed = embed)
 
 bot.run(TOKEN)
 
