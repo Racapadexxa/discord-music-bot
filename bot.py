@@ -34,7 +34,7 @@ async def stop(ctx):
     except:
         pass
 
-@bot.command(aliases=['p'])
+@bot.command(aliases=['p', 'x'])
 async def play(ctx, *args):
     global vc
     global message
@@ -62,7 +62,7 @@ async def play(ctx, *args):
     if not discord.utils.get(bot.voice_clients, guild=ctx.guild):
         try:
             vc = await ctx.author.voice.channel.connect()
-            db[ctx.guild.id] = [vc , 1.0]
+            db[ctx.guild.id] = [vc , 1.0, m_url]
         except:
             embed = discord.Embed(title=f'**Error: you must join a voice channel first !  **\n', color=0x000000)
             await ctx.send(embed=embed)
@@ -81,8 +81,21 @@ async def play(ctx, *args):
     msg = await ctx.send(embed=embed)
     await msg.add_reaction('▶️')
     await msg.add_reaction('⏸️')
+    await msg.add_reaction('🔁')
     await msg.add_reaction('🔉')
     await msg.add_reaction('🔊')
+    
+def replay(guild):
+    global db
+    FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
+    
+    try:
+        vc = db[guild][0]
+        if vc:
+            vc.stop()
+            vc.play(discord.FFmpegPCMAudio(db[guild][2], **FFMPEG_OPTIONS))
+    except:
+        pass
     
 def pause(guild):
     global db
@@ -145,7 +158,11 @@ async def on_reaction_add(reaction, user):
                 vol_down(reaction.message.guild.id)
             elif reaction.emoji == '🔊':
                 vol_up(reaction.message.guild.id)
-                await reaction.remove(user) 
+                await reaction.remove(user)
+            if reaction.emoji == '🔁':
+                await reaction.remove(user)
+                replay(reaction.message.guild.id)
+
                 
 @bot.command()
 async def help(ctx):
