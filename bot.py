@@ -1,8 +1,9 @@
 import discord
 from discord.ext import commands
-from youtube_dl import YoutubeDL
+import yt_dlp
+import time
 
-TOKEN = 'YOUR_DISCORD_BOT_TOKEN'
+TOKEN = 'YOUR-DISCORD-TOKEN'
 
 bot = commands.Bot(command_prefix = '/', intents = discord.Intents.all())
 bot.remove_command('help')
@@ -14,12 +15,17 @@ db = {}
 
 def get_url(item):
     YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist':'True'}
-    with YoutubeDL(YDL_OPTIONS) as ydl:
-        try: 
-            info = ydl.extract_info("ytsearch:%s" % item, download=False)['entries'][0]
-        except Exception: 
-            return False
-    return {'source': info['formats'][0]['url'], 'title': info['title'], 'id': info['id'], 'description': info['description']}
+    with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
+        info = ydl.extract_info("ytsearch:%s" % item, download=False)['entries'][0]
+    return {'source': info['url'], 'title': info['title'], 'id': info['id'], 'description': info['description']}
+
+@bot.command()
+async def leave(ctx):
+        if vc:
+            if vc.is_playing():
+                vc.stop()
+        voice_c = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
+        await voice_c.disconnect()
 
 @bot.command()
 async def stop(ctx):
@@ -33,6 +39,19 @@ async def stop(ctx):
             await voice_c.disconnect()
     except:
         pass
+
+@bot.command()
+async def soundboard(ctx):
+    embed = discord.Embed(title='''**Succhiami la soundboard! **\n''', color=0xffffff)
+    msg =await ctx.send(embed=embed)  
+    await msg.add_reaction('🐶')
+    await msg.add_reaction('👅')
+    await msg.add_reaction('👼')
+    await msg.add_reaction('🤨')
+    await msg.add_reaction('💩')
+    await msg.add_reaction('🇦')
+    await msg.add_reaction('🌋')
+    await msg.add_reaction('🚙')
 
 @bot.command(aliases=['p', 'x'])
 async def play(ctx, *args):
@@ -48,18 +67,19 @@ async def play(ctx, *args):
         m_id = get_url(url)['id']
         m_description = get_url(url)['description']
     except:
-        embed = discord.Embed(title=f'**Error: the video is not accessible and may have age restrictions ! **\n', color=0x000000)
+        embed = discord.Embed(title='''**Error: the video is not accessible and may have restrictions ! **\n''', color=0x000000)
         await ctx.send(embed=embed)
         return
-        
+
     img_link = f'https://i.ytimg.com/vi/{m_id}/hq720.jpg'
     
-    
     voice_c = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
+
     if voice_c:
         if voice_c.is_connected():
             await voice_c.disconnect()
-    if not discord.utils.get(bot.voice_clients, guild=ctx.guild):
+    
+    if discord.utils.get(bot.voice_clients, guild=ctx.guild) == None:
         try:
             vc = await ctx.author.voice.channel.connect()
             db[ctx.guild.id] = [vc , 1.0, m_url]
@@ -67,9 +87,12 @@ async def play(ctx, *args):
             embed = discord.Embed(title=f'**Error: you must join a voice channel first !  **\n', color=0x000000)
             await ctx.send(embed=embed)
             return
+     
     if vc.is_playing():
         vc.stop()
+    
     vc.play(discord.FFmpegPCMAudio(m_url, **FFMPEG_OPTIONS))
+    
     vc.source = discord.PCMVolumeTransformer(vc.source, volume=1.0)
     
     embed = discord.Embed(title=f' currently playing ***{m_title}***\n', description=m_description[0:50], color=0xffffff)
@@ -142,6 +165,31 @@ def vol_down(guild):
     except:
         pass
     
+async def play_file(user, ctx, path):
+   
+    FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': ' -re -nodisp'}
+    voice_c = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
+    
+    if voice_c:
+        if voice_c.is_connected():
+            await voice_c.disconnect()
+    else:
+        try:
+            vc = await user.voice.channel.connect()
+        except:
+            embed = discord.Embed(title='''**Error: Join a voice channel first ! **\n''', color=0x000000)
+            await ctx.send(embed=embed)
+            return
+        
+    if vc:
+        if vc.is_playing():
+            vc.stop()
+    
+    
+    vc.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(path)))
+    time.sleep(5)
+    await discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild).disconnect()
+
 @bot.event
 async def on_reaction_add(reaction, user):
     message = reaction.message
@@ -162,7 +210,30 @@ async def on_reaction_add(reaction, user):
             if reaction.emoji == '🔁':
                 await reaction.remove(user)
                 replay(reaction.message.guild.id)
-
+            if reaction.emoji=='🐶':
+                await reaction.remove(user)
+                await play_file(user, await bot.get_context(reaction.message), "FULL-PATH-TO-SOUND.mp4")
+            if reaction.emoji=='👅':
+                await reaction.remove(user)
+                await play_file(user, await bot.get_context(reaction.message), "FULL-PATH-TO-SOUND.mp4")
+            if reaction.emoji=='👼':
+                await reaction.remove(user)
+                await play_file(user, await bot.get_context(reaction.message), "FULL-PATH-TO-SOUND.mp4")
+            if reaction.emoji=='🤨':
+                await reaction.remove(user)
+                await play_file(user, await bot.get_context(reaction.message), "FULL-PATH-TO-SOUND.mp4")
+            if reaction.emoji=='💩':
+                await reaction.remove(user)
+                await play_file(user, await bot.get_context(reaction.message), "FULL-PATH-TO-SOUND.mp4")
+            if reaction.emoji=='🇦':
+                await reaction.remove(user)
+                await play_file(user, await bot.get_context(reaction.message), "FULL-PATH-TO-SOUND.mp4")
+            if reaction.emoji=='🌋':
+                await reaction.remove(user)
+                await play_file(user, await bot.get_context(reaction.message), "FULL-PATH-TO-SOUND.mp4")
+            if reaction.emoji=='🚙':
+                await reaction.remove(user)
+                await play_file(user, await bot.get_context(reaction.message), "FULL-PATH-TO-SOUND.mp4")
                 
 @bot.command()
 async def help(ctx):
@@ -170,6 +241,7 @@ async def help(ctx):
     embed.add_field(name="/play or /p", value="plays a song by its title or YouTube url")
     embed.add_field(name="/stop or /s", value="stops the song and makes the bot quit")
     embed.add_field(name="/help", value="This command displays a list of all the commands available (not much)")
+    embed.add_field(name="/soundboard", value="This command displays a soundboard with custom sounds")
     
     await ctx.send(embed = embed)
 
