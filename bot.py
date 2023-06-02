@@ -3,8 +3,6 @@ from discord.ext import commands
 from discord.utils import get
 import yt_dlp
 import time
-import asyncio
-import functools
 
 TOKEN = 'YOUR_DISCORD_BOT_TOKEN'
 
@@ -192,7 +190,7 @@ async def play_song(ctx,url1):
     
     img_link = f'https://i.ytimg.com/vi/{m_id}/hqdefault.jpg'
     
-    vc.play(discord.FFmpegPCMAudio(m_url, **FFMPEG_OPTIONS), after=functools.partial(afterq, ctx))
+    vc.play(discord.FFmpegPCMAudio(m_url, **FFMPEG_OPTIONS), after=lambda e: bot.loop.create_task(afterq(ctx)))
     vc.source = discord.PCMVolumeTransformer(vc.source, volume=1.0)
     
     if url1 != ">" and url1 != "<":
@@ -208,13 +206,14 @@ async def play_song(ctx,url1):
     view = MusicPlayerPlaying(ctx)
     await ctx.send(embed=embed,view=view)
            
-async def afterq(ctx, button):
+async def afterq(ctx, button=""):
     global db
     global index
 
     if db[ctx.guild.id][5] > 0 and index < db[ctx.guild.id][5]:
         await play_song(ctx, url1=">")
-    await button.message.edit(view=None)
+    if button != "":
+        await button.message.edit(view=None)
 
         
 async def before(ctx, button):
