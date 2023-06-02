@@ -273,8 +273,9 @@ async def play_file(user, ctx, path):
             vc.stop()
     
     
-    vc.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(path)))
-    time.sleep(5)
+    vc.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(path)), after=lambda e: bot.loop.create_task(getOut(ctx)))
+    
+async def getOut(ctx):
     await discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild).disconnect()              
                 
 class SoundboardUi(discord.ui.View):
@@ -284,11 +285,11 @@ class SoundboardUi(discord.ui.View):
     
     @discord.ui.button(label = "🐶", style = discord.ButtonStyle.grey)
     async def player0(self, button:discord.ui.Button, interaction: discord.Interaction):
-        await play_file(button.user, self.ctx,"PATH-TO-SOUND.mp4")
+        await play_file(button.user, self.ctx,"PATH-TO-SOUND.mp3")
         
     @discord.ui.button(label = "👅", style = discord.ButtonStyle.grey)
     async def player1(self, button:discord.ui.Button, interaction: discord.Interaction):
-        await play_file(button.user, self.ctx,"PATH-TO-SOUND.mp4")
+        await play_file(button.user, self.ctx,"PATH-TO-SOUND.mp3")
         
     @discord.ui.button(label = "👼", style = discord.ButtonStyle.grey)
     async def player2(self, button:discord.ui.Button, interaction: discord.Interaction):
